@@ -1,30 +1,63 @@
-from models.User import Student
-from models.User import Organizer
-from models.Event import Event
-from models.Request import Request
-
+from storage.Repository import Repository
 
 def main():
-    # Проверка Student
-    print("Student")
-    s = Student(1,"ivanov","12345","Иванов И.И.","ИС-21","+79594994939","Математика","Очная")
-    print(s.to_dict())
+    repo = Repository("database.db")
 
-    # Проверка Organizer
-    print("\nOrganizer")
-    o = Organizer(2,"petrova","admin","Петрова А.С.","+79001112233","Куратор конференции",)
-    print(o)
-    print(o.to_dict())
+    # Добавляем студента
+    student_id = repo.add_student(
+        login="ivanov",
+        password="12345",
+        full_name="Иванов И.И.",
+        group="ИС-21",
+        contact="+79594994939",
+        direction="Математика",
+        participation_form="Очная",
+    )
+    print("Студент добавлен, id =", student_id)
 
+    # Добавляем организатора
+    organizer_id = repo.add_organizer(
+        login="petrova",
+        password="admin",
+        full_name="Петрова А.С.",
+        contact="+79001112233",
+        position="Куратор конференции",
+    )
+    print("Организатор добавлен, id =", organizer_id)
 
-    print("\nEvent")
-    e = Event(1,"Научная конференция","15.10.2026","Аудитория 305","Ежегодная студенческая конференция")
-    print(e.to_dict())
+    # Добавляем мероприятие
+    event_id = repo.add_event(
+        title="Научная конференция",
+        event_date="15.10.2026",
+        place="Аудитория 305",
+        description="Ежегодная студенческая конференция",
+    )
+    print("Мероприятие добавлено, id =", event_id)
 
-    # Проверка Request
-    print("\nRequest")
-    r = Request(1,user_id=s.id,event_id=e.id,)
-    print(r.to_dict())
+    # Подаём заявку
+    request_id = repo.add_request(student_id, event_id)
+    print("Заявка добавлена, id =", request_id)
+
+    # Подтверждаем участие
+    repo.update_status(request_id, "подтверждена")
+
+    # Ищем
+    found = repo.search_requests("Иванов")
+    print("Найдено заявок:", len(found))
+
+    # Сводка
+    print("Сводка:", repo.summary(event_id))
+
+    # Проверяем загрузку
+    print("\nВсе пользователи:")
+    for u in repo.get_all_users():
+        print(" ", u)
+
+    print("\nВсе заявки:")
+    for r in repo.get_all_requests():
+        print(" ", r)
+
+    repo.close()
 
 
 if __name__ == "__main__":
